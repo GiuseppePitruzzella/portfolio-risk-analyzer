@@ -63,8 +63,7 @@ Make sure you have installed:
 
 ## 📁 Project Structure
 
-````
-
+```
 portfolio-risk-analyzer/
 ├── .gitignore               # File to ignore files and folders in Git
 ├── README.md                # Project description and instructions
@@ -93,31 +92,17 @@ portfolio-risk-analyzer/
 ├── docs/                    # Additional documentation (architecture, algorithms)
 └── scripts/                 # Utility scripts (setup, test, deploy)
 └── setup_kafka_topics.sh
-
 ```
 
----
-
-## 🔒 `.gitignore` Strategy
-
-To keep the repository clean and prevent accidental commits of unnecessary or sensitive files:
-
-* Files generated during execution (logs, temporary outputs).
-* Downloaded Python dependencies (`venv`, `__pycache__`).
-* Sensitive or environment-specific configuration files (`.env`).
-* Large data files not intended for version control (e.g., full historical datasets, if too large).
-* OS-specific system files (e.g., `.DS_Store`).
-
----
 
 ## 📊 Historical Data for "Training"
 
 To calculate risk metrics such as historical VaR and for future backtesting or stress tests, **historical ETF price data** is required.
+...
 
 You can obtain this data from several sources:
 
-* **Free Sources:** Yahoo Finance (via CSV download or Python libraries like `yfinance`), Investing.com, or public data from some stock exchanges. These are ideal for getting started.
-* **Paid (Professional) Sources:** For greater reliability, granularity (intraday/tick-by-tick data), and coverage, consider paid API services like Alpha Vantage, Twelve Data, IEX Cloud, or, for institutional use, Bloomberg/Refinitiv.
+...
 
 Historical data will be loaded and processed by Spark to derive the necessary risk parameters, which will then be used in real-time calculations.
 
