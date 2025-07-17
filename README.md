@@ -1,20 +1,12 @@
-<br />
-<div align="center">
-    <a href="https://github.com/GiuseppePitruzzella/portfolio-risk-analyzer">
-        <img src="assets/images/logo.png" alt="Logo" width="300"> </a>
-
-    <h3 align="center">Real-Time Portfolio Risk Sentinel</h3>
-
-    <p align="center">
-        A real-time analysis pipeline to monitor and manage ETF portfolio risk.
-        <br />
-        <a href="https://github.com/GiuseppePitruzzella/portfolio-risk-analyzer/issues">Report a Bug</a>
-        ·
-        <a href="https://github.com/GiuseppePitruzzella/portfolio-risk-analyzer/issues">Request a Feature</a>
-    </p>
-</div>
-
----
+<html>
+    <div align="center">
+        <a href="https://github.com/GiuseppePitruzzella/portfolio-risk-analyzer">
+            <img src="assets/images/logo.png" alt="Logo" width="300">
+        </a>
+        <h2>Portfolio Risk Analyzer</h2>
+        <i>Monitor and protect your portfolio in real-time</i>
+    </div>    
+</html>
 
 ## 📘 Project Overview
 
