@@ -1,0 +1,123 @@
+
+networks:
+  risk-analyzer:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    networks:
+      - risk-analyzer
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0  # Versione specifica e stabile
+    networks:
+      - risk-analyzer
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    networks:
+      - risk-analyzer
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.0
+    networks:
+      - risk-analyzer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/config:/usr/share/logstash/config
+    environment:
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - "5044:5044"
+    env_file:
+      - .env
+
+# Aggiungi questi servizi se non li hai già
+
+  spark-master:
+    image: bitnami/spark:3.4.0
+    networks:
+      - risk-analyzer
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8080:8080"  # Web UI
+      - "7077:7077"  # Spark Master
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./spark/data:/opt/spark/data
+
+  spark-worker:
+    image: bitnami/spark:3.4.0
+    networks:
+      - risk-analyzer
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./spark/data:/opt/spark/data
+
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - risk-analyzer
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+
+volumes:
+  es_data:
+  grafana_data:
