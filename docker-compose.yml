@@ -75,6 +75,49 @@ services:
       timeout: 10s
       retries: 3
 
+  # Apache Spark - Stream Processing Engine
+  spark-master:
+    image: bitnami/spark:3.5.0
+    hostname: spark-master
+    container_name: spark-master
+    ports:
+      - "8081:8080"  # Spark Master Web UI
+      - "7077:7077"  # Spark Master Port
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - ./scripts/spark:/opt/bitnami/spark/jobs
+      - ./data:/opt/spark/data
+      - spark-logs:/opt/bitnami/spark/logs
+
+  spark-worker:
+    image: bitnami/spark:3.5.0
+    hostname: spark-worker
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"  # Spark Worker Web UI
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - ./scripts/spark:/opt/bitnami/spark/jobs
+      - ./data:/opt/spark/data
+      - spark-logs:/opt/bitnami/spark/logs
+
   # Kafka UI - Interfaccia web per monitorare Kafka (opzionale ma utile)
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -82,7 +125,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "8081:8080"
+      - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
@@ -93,6 +136,7 @@ volumes:
   zookeeper-logs:
   kafka-data:
   logstash-data:
+  spark-logs:
 
 networks:
   default:
