@@ -67,6 +67,7 @@ services:
       - ./config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - logstash-data:/usr/share/logstash/data
+      - ./logs:/usr/share/logstash/output_logs
     command: logstash -f /usr/share/logstash/pipeline/logstash.conf --config.reload.automatic
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9600/_node/stats || exit 1"]
