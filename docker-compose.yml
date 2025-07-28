@@ -76,6 +76,7 @@ services:
       retries: 3
 
   # Elasticsearch - Per archiviazione e analisi dei dati storici
+  # Elasticsearch - Per archiviazione e analisi dei dati storici (Configurazione Leggera)
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
     hostname: elasticsearch
@@ -88,20 +89,26 @@ services:
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"  # Ridotto da 1g a 512m
       - cluster.name=portfolio-risk-cluster
       - node.name=portfolio-risk-node
+      - bootstrap.memory_lock=false  # Disabilita memory lock
+      - action.auto_create_index=true
+      - cluster.initial_master_nodes=portfolio-risk-node
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+    deploy:
+      resources:
+        limits:
+          memory: 1G  # Limite memoria container
+        reservations:
+          memory: 512M
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+      retries: 5
+      start_period: 60s
 
   # Kibana - Interfaccia web per Elasticsearch (opzionale)
   kibana:
@@ -141,6 +148,11 @@ services:
       - ./scripts/spark:/opt/bitnami/spark/jobs
       - ./data:/opt/spark/data
       - spark-logs:/opt/bitnami/spark/logs
+    command: >
+      bash -c "
+        pip install numpy scikit-learn pandas &&
+        /opt/bitnami/scripts/spark/entrypoint.sh /opt/bitnami/scripts/spark/run.sh
+      "
 
   spark-worker:
     image: bitnami/spark:3.5.0
@@ -164,7 +176,12 @@ services:
       - ./scripts/spark:/opt/bitnami/spark/jobs
       - ./data:/opt/spark/data
       - spark-logs:/opt/bitnami/spark/logs
-
+    command: >
+      bash -c "
+        pip install numpy scikit-learn pandas &&
+        /opt/bitnami/scripts/spark/entrypoint.sh /opt/bitnami/scripts/spark/run.sh
+      "
+  
   # Kafka UI - Interfaccia web per monitorare Kafka (opzionale ma utile)
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
