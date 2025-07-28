@@ -1,2 +1,0 @@
-- pipeline.id: financial_data_pipeline
-  path.config: "/usr/share/logstash/pipeline"
